@@ -57,13 +57,13 @@ import org.springframework.util.StringUtils;
 class BeanDefinitionLoader {
 
 	private final Object[] sources;
-
+    //注解bean定义读取器
 	private final AnnotatedBeanDefinitionReader annotatedReader;
 
 	private final XmlBeanDefinitionReader xmlReader;
 
 	private BeanDefinitionReader groovyReader;
-
+	//类路径定义扫描器
 	private final ClassPathBeanDefinitionScanner scanner;
 
 	private ResourceLoader resourceLoader;
@@ -83,7 +83,9 @@ class BeanDefinitionLoader {
 		if (isGroovyPresent()) {
 			this.groovyReader = new GroovyBeanDefinitionReader(registry);
 		}
+		//类路径扫描器
 		this.scanner = new ClassPathBeanDefinitionScanner(registry);
+		//扫描器添加排除过滤器
 		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 	}
 
@@ -146,6 +148,11 @@ class BeanDefinitionLoader {
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
 
+	/**
+	 * 加载一个类资源
+	 * @param source
+	 * @return
+	 */
 	private int load(Class<?> source) {
 		if (isGroovyPresent()
 				&& GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
@@ -154,6 +161,7 @@ class BeanDefinitionLoader {
 					GroovyBeanDefinitionSource.class);
 			load(loader);
 		}
+		//判断是否标记有conponent注解
 		if (isComponent(source)) {
 			this.annotatedReader.register(source);
 			return 1;

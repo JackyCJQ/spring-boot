@@ -16,17 +16,17 @@
 
 package org.springframework.boot;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ReflectionUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
+ * 就是一个集合
  * A collection of {@link SpringApplicationRunListener}.
  *
  * @author Phillip Webb
@@ -37,7 +37,7 @@ class SpringApplicationRunListeners {
 
 	private final List<SpringApplicationRunListener> listeners;
 
-	SpringApplicationRunListeners(Log log,Collection<? extends SpringApplicationRunListener> listeners) {
+	SpringApplicationRunListeners(Log log, Collection<? extends SpringApplicationRunListener> listeners) {
 		this.log = log;
 		this.listeners = new ArrayList<>(listeners);
 	}
@@ -48,6 +48,11 @@ class SpringApplicationRunListeners {
 		}
 	}
 
+	/**
+	 * 根据环境配置为每一个Listener配置
+	 *
+	 * @param environment
+	 */
 	public void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.environmentPrepared(environment);
@@ -85,18 +90,16 @@ class SpringApplicationRunListeners {
 	}
 
 	private void callFailedListener(SpringApplicationRunListener listener,
-			ConfigurableApplicationContext context, Throwable exception) {
+									ConfigurableApplicationContext context, Throwable exception) {
 		try {
 			listener.failed(context, exception);
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			if (exception == null) {
 				ReflectionUtils.rethrowRuntimeException(ex);
 			}
 			if (this.log.isDebugEnabled()) {
 				this.log.error("Error handling failed", ex);
-			}
-			else {
+			} else {
 				String message = ex.getMessage();
 				message = (message != null ? message : "no error message");
 				this.log.warn("Error handling failed (" + message + ")");

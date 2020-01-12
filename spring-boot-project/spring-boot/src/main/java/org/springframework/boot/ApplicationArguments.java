@@ -19,12 +19,6 @@ package org.springframework.boot;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Provides access to the arguments that were used to run a {@link SpringApplication}.
- *
- * @author Phillip Webb
- * @since 1.3.0
- */
 public interface ApplicationArguments {
 
 	/**

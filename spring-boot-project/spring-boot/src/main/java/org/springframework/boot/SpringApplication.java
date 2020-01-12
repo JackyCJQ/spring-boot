@@ -55,58 +55,40 @@ import java.security.AccessControlException;
 import java.util.*;
 
 /**
- * Class that can be used to bootstrap and launch a Spring application from a Java main
- * method. By default class will perform the following steps to bootstrap your
+ * By default class will perform the following steps to bootstrap your
  * application:
- *
- * <ul>
- * <li>Create an appropriate {@link ApplicationContext} instance (depending on your
- * classpath)</li>
- * <li>Register a {@link CommandLinePropertySource} to expose command line arguments as
- * Spring properties</li>
- * <li>Refresh the application context, loading all singleton beans</li>
- * <li>Trigger any {@link CommandLineRunner} beans</li>
- * </ul>
  * <p>
+ * 1. Create an appropriate {@link ApplicationContext} instance (depending on your
+ * classpath)
+ * 2.Register a {@link CommandLinePropertySource} to expose command line arguments as
+ * Spring properties
+ * 3.Refresh the application context, loading all singleton beans
+ * 4.Trigger any {@link CommandLineRunner} beans
  * In most circumstances the static {@link #run(Class, String[])} method can be called
  * directly from your {@literal main} method to bootstrap your application:
  *
- * <pre class="code">
- * &#064;Configuration
- * &#064;EnableAutoConfiguration
- * public class MyApplication  {
- *
- *   // ... Bean definitions
- *
- *   public static void main(String[] args) throws Exception {
- *     SpringApplication.run(MyApplication.class, args);
- *   }
- * }
- * </pre>
- *
+ * @Configuration
+ * @EnableAutoConfiguration public class MyApplication  {
  * <p>
+ * public static void main(String[] args) throws Exception {
+ * SpringApplication.run(MyApplication.class, args);
+ * }
+ * }
  * For more advanced configuration a {@link SpringApplication} instance can be created and
  * customized before being run:
- *
- * <pre class="code">
- * public static void main(String[] args) throws Exception {
- *   SpringApplication application = new SpringApplication(MyApplication.class);
- *   // ... customize application settings here
- *   application.run(args)
- * }
- * </pre>
  * <p>
+ * public static void main(String[] args) throws Exception {
+ * SpringApplication application = new SpringApplication(MyApplication.class);
+ * // ... customize application settings here
+ * application.run(args)
+ * }
  * {@link SpringApplication}s can read beans from a variety of different sources. It is
  * generally recommended that a single {@code @Configuration} class is used to bootstrap
  * your application, however, you may also set {@link #getSources() sources} from:
- * <ul>
- * <li>The fully qualified class name to be loaded by
- * {@link AnnotatedBeanDefinitionReader}</li>
- * <li>The location of an XML resource to be loaded by {@link XmlBeanDefinitionReader}, or
- * a groovy script to be loaded by {@link GroovyBeanDefinitionReader}</li>
- * <li>The name of a package to be scanned by {@link ClassPathBeanDefinitionScanner}</li>
- * </ul>
- * <p>
+ * 1.The fully qualified class name to be loaded by{@link AnnotatedBeanDefinitionReader}
+ * 2.The location of an XML resource to be loaded by {@link XmlBeanDefinitionReader},
+ * 3.a groovy script to be loaded by {@link GroovyBeanDefinitionReader}
+ * 4.The name of a package to be scanned by {@link ClassPathBeanDefinitionScanner}
  * Configuration properties are also bound to the {@link SpringApplication}. This makes it
  * possible to set {@link SpringApplication} properties dynamically, like additional
  * sources ("spring.main.sources" - a CSV list) the flag to indicate a web environment
@@ -116,57 +98,45 @@ import java.util.*;
 public class SpringApplication {
 
 	/**
-	 * The class name of application context that will be used by default for non-web
-	 * environments.
+	 * The class name of application context that will be used by default for non-web environments.
 	 */
-	public static final String DEFAULT_CONTEXT_CLASS = "org.springframework.context."
-			+ "annotation.AnnotationConfigApplicationContext";
+	public static final String DEFAULT_CONTEXT_CLASS = "org.springframework.context.annotation.AnnotationConfigApplicationContext";
 
 	/**
-	 * The class name of application context that will be used by default for web
-	 * environments.
+	 * The class name of application context that will be used by default for web environments.
 	 */
-	public static final String DEFAULT_WEB_CONTEXT_CLASS = "org.springframework.boot."
-			+ "web.servlet.context.AnnotationConfigServletWebServerApplicationContext";
+	public static final String DEFAULT_WEB_CONTEXT_CLASS = "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext";
 
-	private static final String[] WEB_ENVIRONMENT_CLASSES = {"javax.servlet.Servlet",
-			"org.springframework.web.context.ConfigurableWebApplicationContext"};
+	/**
+	 * web environments default class
+	 */
+	private static final String[] WEB_ENVIRONMENT_CLASSES = {"javax.servlet.Servlet", "org.springframework.web.context.ConfigurableWebApplicationContext"};
 
 	/**
 	 * The class name of application context that will be used by default for reactive web
 	 * environments.
 	 */
-	public static final String DEFAULT_REACTIVE_WEB_CONTEXT_CLASS = "org.springframework."
-			+ "boot.web.reactive.context.AnnotationConfigReactiveWebServerApplicationContext";
+	public static final String DEFAULT_REACTIVE_WEB_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.AnnotationConfigReactiveWebServerApplicationContext";
 
-	private static final String REACTIVE_WEB_ENVIRONMENT_CLASS = "org.springframework."
-			+ "web.reactive.DispatcherHandler";
+	private static final String REACTIVE_WEB_ENVIRONMENT_CLASS = "org.springframework.web.reactive.DispatcherHandler";
 
-	private static final String MVC_WEB_ENVIRONMENT_CLASS = "org.springframework."
-			+ "web.servlet.DispatcherServlet";
+	private static final String MVC_WEB_ENVIRONMENT_CLASS = "org.springframework.web.servlet.DispatcherServlet";
 
 	private static final String JERSEY_WEB_ENVIRONMENT_CLASS = "org.glassfish.jersey.server.ResourceConfig";
 
-	/**
-	 * Default banner location.
-	 */
-	public static final String BANNER_LOCATION_PROPERTY_VALUE = SpringApplicationBannerPrinter.DEFAULT_BANNER_LOCATION;
-
-	/**
-	 * Banner location property key.
-	 */
-	public static final String BANNER_LOCATION_PROPERTY = SpringApplicationBannerPrinter.BANNER_LOCATION_PROPERTY;
-
 	private static final String SYSTEM_PROPERTY_JAVA_AWT_HEADLESS = "java.awt.headless";
 
+	//打印日志
 	private static final Log logger = LogFactory.getLog(SpringApplication.class);
-
+	//包含主启动类的一个集合
 	private Set<Class<?>> primarySources;
 
 	private Set<String> sources = new LinkedHashSet<>();
 
+	//主启动类
 	private Class<?> mainApplicationClass;
 
+	//banner输出的位置
 	private Banner.Mode bannerMode = Banner.Mode.CONSOLE;
 
 	private boolean logStartupInfo = true;
@@ -177,6 +147,7 @@ public class SpringApplication {
 
 	private ResourceLoader resourceLoader;
 
+	//bean 名字生成器
 	private BeanNameGenerator beanNameGenerator;
 
 	private ConfigurableEnvironment environment;
@@ -192,9 +163,9 @@ public class SpringApplication {
 	private List<ApplicationContextInitializer<?>> initializers;
 
 	private List<ApplicationListener<?>> listeners;
-
+	//所有的默认配置
 	private Map<String, Object> defaultProperties;
-
+	//额外激活的配置文件
 	private Set<String> additionalProfiles = new HashSet<>();
 
 	private boolean allowBeanDefinitionOverriding;
@@ -206,12 +177,21 @@ public class SpringApplication {
 		this(null, primarySources);
 	}
 
+	/**
+	 * 默认资源加载器
+	 *
+	 * @param resourceLoader
+	 * @param primarySources
+	 */
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+		//启动的时候默认为null
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		//记录主启动类
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+		//判断是什么环境的服务
 		this.webApplicationType = deduceWebApplicationType();
 		//设置上下文初始化器
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
@@ -226,7 +206,7 @@ public class SpringApplication {
 	 * @return
 	 */
 	private WebApplicationType deduceWebApplicationType() {
-		//通过类加载这个路径下的类 来判断是否存在
+		//通过类加载器加载这个路径下的类 来判断是否存在
 		if (ClassUtils.isPresent(REACTIVE_WEB_ENVIRONMENT_CLASS, null)
 				&& !ClassUtils.isPresent(MVC_WEB_ENVIRONMENT_CLASS, null)
 				&& !ClassUtils.isPresent(JERSEY_WEB_ENVIRONMENT_CLASS, null)) {
@@ -276,8 +256,9 @@ public class SpringApplication {
 		//启动每个监听器
 		listeners.starting();
 		try {
+			//根据启动的参数 生成一个ApplicationArguments
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
-			//创建环境
+			//创建环境，主要是解析启动参数中的命令行参数
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			//设置忽略的bean的info
 			configureIgnoreBeanInfo(environment);
@@ -293,6 +274,7 @@ public class SpringApplication {
 			refreshContext(context);
 			//这里目前没有什么操作
 			afterRefresh(context, applicationArguments);
+			//结束操作
 			stopWatch.stop();
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass)
@@ -314,7 +296,13 @@ public class SpringApplication {
 		return context;
 	}
 
-	//开始准备环境
+	/**
+	 * 开始准备环境
+	 *
+	 * @param listeners
+	 * @param applicationArguments
+	 * @return
+	 */
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments) {
 		// 创建或者是获取已经创建好的
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
@@ -332,15 +320,29 @@ public class SpringApplication {
 		return environment;
 	}
 
+	/**
+	 * 准备context
+	 *
+	 * @param context
+	 * @param environment
+	 * @param listeners
+	 * @param applicationArguments
+	 * @param printedBanner
+	 */
 	private void prepareContext(ConfigurableApplicationContext context,
 								ConfigurableEnvironment environment,
 								SpringApplicationRunListeners listeners,
 								ApplicationArguments applicationArguments,
 								Banner printedBanner) {
+		//设置容器初始化的时候的环境
 		context.setEnvironment(environment);
+		//设置加载资源相关的配置
 		postProcessApplicationContext(context);
+		//启动所有的初始化器
 		applyInitializers(context);
+		//启动所有的监听器
 		listeners.contextPrepared(context);
+		//打印启动信息
 		if (this.logStartupInfo) {
 			logStartupInfo(context.getParent() == null);
 			logStartupProfileInfo(context);
@@ -348,6 +350,7 @@ public class SpringApplication {
 
 		// Add boot specific singleton beans
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+		//再额外注册一个参数处理器
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
 		if (printedBanner != null) {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
@@ -357,8 +360,10 @@ public class SpringApplication {
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
 		// Load the sources
+		//一般就是主启动类
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+		//加载启动类注入到容器中
 		load(context, sources.toArray(new Object[0]));
 		listeners.contextLoaded(context);
 	}
@@ -379,6 +384,12 @@ public class SpringApplication {
 				SYSTEM_PROPERTY_JAVA_AWT_HEADLESS, Boolean.toString(this.headless)));
 	}
 
+	/**
+	 * 主启动类的参数
+	 *
+	 * @param args
+	 * @return
+	 */
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
 		Class<?>[] types = new Class<?>[]{SpringApplication.class, String[].class};
 		//获取SpringApplicationRunListener类型
@@ -404,7 +415,7 @@ public class SpringApplication {
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
 		//这里已经通过反射进行了创建
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
-		//记性了一下排序
+		//进行一下排序
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
 	}
@@ -432,6 +443,11 @@ public class SpringApplication {
 		return instances;
 	}
 
+	/**
+	 * 根据不同的应用 创建对应的环境配置
+	 *
+	 * @return
+	 */
 	private ConfigurableEnvironment getOrCreateEnvironment() {
 		if (this.environment != null) {
 			return this.environment;
@@ -471,12 +487,16 @@ public class SpringApplication {
 	 */
 	protected void configurePropertySources(ConfigurableEnvironment environment,
 											String[] args) {
+		//配置为一个key可能对应多个value
 		MutablePropertySources sources = environment.getPropertySources();
 		if (this.defaultProperties != null && !this.defaultProperties.isEmpty()) {
+			//添加默认的配置
 			sources.addLast(new MapPropertySource("defaultProperties", this.defaultProperties));
 		}
+		//如果存在默认的配置
 		if (this.addCommandLineProperties && args.length > 0) {
 			String name = CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME;
+			//如果已经存在了同名的配置
 			if (sources.contains(name)) {
 				PropertySource<?> source = sources.get(name);
 				CompositePropertySource composite = new CompositePropertySource(name);
@@ -505,16 +525,14 @@ public class SpringApplication {
 		// But these ones should go first (last wins in a property key clash)
 		Set<String> profiles = new LinkedHashSet<>(this.additionalProfiles);
 		profiles.addAll(Arrays.asList(environment.getActiveProfiles()));
+		//和配置的一起
 		environment.setActiveProfiles(StringUtils.toStringArray(profiles));
 	}
 
 	private void configureIgnoreBeanInfo(ConfigurableEnvironment environment) {
-		if (System.getProperty(
-				CachedIntrospectionResults.IGNORE_BEANINFO_PROPERTY_NAME) == null) {
-			Boolean ignore = environment.getProperty("spring.beaninfo.ignore",
-					Boolean.class, Boolean.TRUE);
-			System.setProperty(CachedIntrospectionResults.IGNORE_BEANINFO_PROPERTY_NAME,
-					ignore.toString());
+		if (System.getProperty(CachedIntrospectionResults.IGNORE_BEANINFO_PROPERTY_NAME) == null) {
+			Boolean ignore = environment.getProperty("spring.beaninfo.ignore", Boolean.class, Boolean.TRUE);
+			System.setProperty(CachedIntrospectionResults.IGNORE_BEANINFO_PROPERTY_NAME, ignore.toString());
 		}
 	}
 
@@ -571,6 +589,7 @@ public class SpringApplication {
 						ex);
 			}
 		}
+		//进行初始化context
 		return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 
@@ -583,17 +602,14 @@ public class SpringApplication {
 	protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
 		if (this.beanNameGenerator != null) {
 			context.getBeanFactory().registerSingleton(
-					AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,
-					this.beanNameGenerator);
+					AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR, this.beanNameGenerator);
 		}
 		if (this.resourceLoader != null) {
 			if (context instanceof GenericApplicationContext) {
-				((GenericApplicationContext) context)
-						.setResourceLoader(this.resourceLoader);
+				((GenericApplicationContext) context).setResourceLoader(this.resourceLoader);
 			}
 			if (context instanceof DefaultResourceLoader) {
-				((DefaultResourceLoader) context)
-						.setClassLoader(this.resourceLoader.getClassLoader());
+				((DefaultResourceLoader) context).setClassLoader(this.resourceLoader.getClassLoader());
 			}
 		}
 	}
@@ -661,17 +677,14 @@ public class SpringApplication {
 
 	/**
 	 * Load beans into the application context.
-	 *
-	 * @param context the context to load beans into
-	 * @param sources the sources to load
+	 * 主要是把主启动类加载进容器中
 	 */
 	protected void load(ApplicationContext context, Object[] sources) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(
 					"Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
-		BeanDefinitionLoader loader = createBeanDefinitionLoader(
-				getBeanDefinitionRegistry(context), sources);
+		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
 		}
@@ -710,17 +723,14 @@ public class SpringApplication {
 
 	/**
 	 * Get the bean definition registry.
-	 *
-	 * @param context the application context
-	 * @return the BeanDefinitionRegistry if it can be determined
 	 */
 	private BeanDefinitionRegistry getBeanDefinitionRegistry(ApplicationContext context) {
 		if (context instanceof BeanDefinitionRegistry) {
 			return (BeanDefinitionRegistry) context;
 		}
+		//应该会走入到这里
 		if (context instanceof AbstractApplicationContext) {
-			return (BeanDefinitionRegistry) ((AbstractApplicationContext) context)
-					.getBeanFactory();
+			return (BeanDefinitionRegistry) ((AbstractApplicationContext) context).getBeanFactory();
 		}
 		throw new IllegalStateException("Could not locate BeanDefinitionRegistry");
 	}
