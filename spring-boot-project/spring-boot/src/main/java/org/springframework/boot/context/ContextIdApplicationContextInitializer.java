@@ -16,14 +16,14 @@
 
 package org.springframework.boot.context;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.StringUtils;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * {@link ApplicationContextInitializer} that sets the Spring
@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 public class ContextIdApplicationContextInitializer implements
 		ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
+	//设置顺序
 	private int order = Ordered.LOWEST_PRECEDENCE - 10;
 
 	public void setOrder(int order) {
@@ -51,6 +52,7 @@ public class ContextIdApplicationContextInitializer implements
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
 		ContextId contextId = getContextId(applicationContext);
+		//bean中注册了这个bean
 		applicationContext.setId(contextId.getId());
 		applicationContext.getBeanFactory().registerSingleton(ContextId.class.getName(),
 				contextId);
@@ -58,6 +60,7 @@ public class ContextIdApplicationContextInitializer implements
 
 	private ContextId getContextId(ConfigurableApplicationContext applicationContext) {
 		ApplicationContext parent = applicationContext.getParent();
+		//如果父类中已经有了则直接创建
 		if (parent != null && parent.containsBean(ContextId.class.getName())) {
 			return parent.getBean(ContextId.class).createChildId();
 		}
@@ -65,6 +68,7 @@ public class ContextIdApplicationContextInitializer implements
 	}
 
 	private String getApplicationId(ConfigurableEnvironment environment) {
+		//默认就是应用的名字
 		String name = environment.getProperty("spring.application.name");
 		return (StringUtils.hasText(name) ? name : "application");
 	}
@@ -82,6 +86,7 @@ public class ContextIdApplicationContextInitializer implements
 			this.id = id;
 		}
 
+		//设置子容器的名字
 		ContextId createChildId() {
 			return new ContextId(this.id + "-" + this.children.incrementAndGet());
 		}

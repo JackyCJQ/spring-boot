@@ -27,9 +27,6 @@ import java.util.List;
 
 /**
  * 就是一个集合
- * A collection of {@link SpringApplicationRunListener}.
- *
- * @author Phillip Webb
  */
 class SpringApplicationRunListeners {
 

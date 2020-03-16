@@ -21,11 +21,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.CachedIntrospectionResults;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.groovy.GroovyBeanDefinitionReader;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -34,10 +32,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigUtils;
-import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.GenericTypeResolver;
@@ -54,68 +50,14 @@ import java.lang.reflect.Constructor;
 import java.security.AccessControlException;
 import java.util.*;
 
-/**
- * By default class will perform the following steps to bootstrap your
- * application:
- * <p>
- * 1. Create an appropriate {@link ApplicationContext} instance (depending on your
- * classpath)
- * 2.Register a {@link CommandLinePropertySource} to expose command line arguments as
- * Spring properties
- * 3.Refresh the application context, loading all singleton beans
- * 4.Trigger any {@link CommandLineRunner} beans
- * In most circumstances the static {@link #run(Class, String[])} method can be called
- * directly from your {@literal main} method to bootstrap your application:
- *
- * @Configuration
- * @EnableAutoConfiguration public class MyApplication  {
- * <p>
- * public static void main(String[] args) throws Exception {
- * SpringApplication.run(MyApplication.class, args);
- * }
- * }
- * For more advanced configuration a {@link SpringApplication} instance can be created and
- * customized before being run:
- * <p>
- * public static void main(String[] args) throws Exception {
- * SpringApplication application = new SpringApplication(MyApplication.class);
- * // ... customize application settings here
- * application.run(args)
- * }
- * {@link SpringApplication}s can read beans from a variety of different sources. It is
- * generally recommended that a single {@code @Configuration} class is used to bootstrap
- * your application, however, you may also set {@link #getSources() sources} from:
- * 1.The fully qualified class name to be loaded by{@link AnnotatedBeanDefinitionReader}
- * 2.The location of an XML resource to be loaded by {@link XmlBeanDefinitionReader},
- * 3.a groovy script to be loaded by {@link GroovyBeanDefinitionReader}
- * 4.The name of a package to be scanned by {@link ClassPathBeanDefinitionScanner}
- * Configuration properties are also bound to the {@link SpringApplication}. This makes it
- * possible to set {@link SpringApplication} properties dynamically, like additional
- * sources ("spring.main.sources" - a CSV list) the flag to indicate a web environment
- * ("spring.main.web-application-type=none") or the flag to switch off the banner
- * ("spring.main.banner-mode=off").
- */
 public class SpringApplication {
 
-	/**
-	 * The class name of application context that will be used by default for non-web environments.
-	 */
 	public static final String DEFAULT_CONTEXT_CLASS = "org.springframework.context.annotation.AnnotationConfigApplicationContext";
 
-	/**
-	 * The class name of application context that will be used by default for web environments.
-	 */
 	public static final String DEFAULT_WEB_CONTEXT_CLASS = "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext";
 
-	/**
-	 * web environments default class
-	 */
 	private static final String[] WEB_ENVIRONMENT_CLASSES = {"javax.servlet.Servlet", "org.springframework.web.context.ConfigurableWebApplicationContext"};
 
-	/**
-	 * The class name of application context that will be used by default for reactive web
-	 * environments.
-	 */
 	public static final String DEFAULT_REACTIVE_WEB_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.AnnotationConfigReactiveWebServerApplicationContext";
 
 	private static final String REACTIVE_WEB_ENVIRONMENT_CLASS = "org.springframework.web.reactive.DispatcherHandler";
@@ -156,6 +98,7 @@ public class SpringApplication {
 
 	private WebApplicationType webApplicationType;
 
+	//默认支持无头服务
 	private boolean headless = true;
 
 	private boolean registerShutdownHook = true;
@@ -183,10 +126,9 @@ public class SpringApplication {
 	 * @param resourceLoader
 	 * @param primarySources
 	 */
-
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
-		//启动的时候默认为null
+		//默认为null
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		//记录主启动类
@@ -195,6 +137,7 @@ public class SpringApplication {
 		this.webApplicationType = deduceWebApplicationType();
 		//设置上下文初始化器
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+		//设置监听器
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		//获取主启动器
 		this.mainApplicationClass = deduceMainApplicationClass();
@@ -249,14 +192,14 @@ public class SpringApplication {
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
-		//默认是设置为true
+		//默认是设置为true，设置支持无头服务
 		configureHeadlessProperty();
-		//创建监听器
+		//获取所有的runListeners
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		//启动每个监听器
 		listeners.starting();
 		try {
-			//根据启动的参数 生成一个ApplicationArguments
+			//根据启动的参数 生成一个ApplicationArguments 获取启动的参数
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 			//创建环境，主要是解析启动参数中的命令行参数
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
@@ -676,7 +619,6 @@ public class SpringApplication {
 	}
 
 	/**
-	 * Load beans into the application context.
 	 * 主要是把主启动类加载进容器中
 	 */
 	protected void load(ApplicationContext context, Object[] sources) {

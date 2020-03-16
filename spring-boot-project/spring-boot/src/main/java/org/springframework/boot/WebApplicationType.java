@@ -16,7 +16,9 @@
 
 package org.springframework.boot;
 
-
+/**
+ * 三种环境
+ */
 public enum WebApplicationType {
 
 	NONE,
