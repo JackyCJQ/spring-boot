@@ -37,12 +37,7 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 
 /**
- * 报告配置问题
- * {@link ApplicationContextInitializer} to report warnings for common misconfiguration
- * mistakes.
- *
- * @author Phillip Webb
- * @since 1.2.0
+ * 对于一些一般性配置错误在日志上输出警告
  */
 public class ConfigurationWarningsApplicationContextInitializer
 		implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -51,12 +46,16 @@ public class ConfigurationWarningsApplicationContextInitializer
 
 	@Override
 	public void initialize(ConfigurableApplicationContext context) {
-		//添加一个beanPostProcessor
+		// 并非真正在该初始化方法中执行相应的检查和日志报警任务，
+		// 而是构造一个任务(getChecks())，然后注册一个BeanDefinitionRegistryPostProcessor
+		// (ConfigurationWarningsPostProcessor)到容器，真正的检查和日志报警任务
+		// 会在容器的BeanFactory post-process过程中进行。
 		context.addBeanFactoryPostProcessor(new ConfigurationWarningsPostProcessor(getChecks()));
 	}
 
 	/**
 	 * Returns the checks that should be applied.
+	 * 构建要执行的检查任务
 	 *
 	 * @return the checks to apply
 	 */
@@ -65,7 +64,8 @@ public class ConfigurationWarningsApplicationContextInitializer
 	}
 
 	/**
-	 *
+	 * 定义一个BeanDefinitionRegistryPostProcessor，它会在BeanFactory的post-process阶段
+	 * 执行指定的检查逻辑，并在遇到问题时日志输出警告
 	 * {@link BeanDefinitionRegistryPostProcessor} to report warnings.
 	 */
 	protected static final class ConfigurationWarningsPostProcessor
@@ -91,8 +91,11 @@ public class ConfigurationWarningsApplicationContextInitializer
 		public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
 				throws BeansException {
 			for (Check check : this.checks) {
+				// 执行指定的检查任务
 				String message = check.getWarning(registry);
+				// 如果指定的检查任务执行遇到错误，会有非空错误消息返回，
 				if (StringUtils.hasLength(message)) {
+					// 如果有非空错误消息返回，日志输出该错误消息，使用警告级别
 					warn(message);
 				}
 			}
@@ -109,12 +112,14 @@ public class ConfigurationWarningsApplicationContextInitializer
 
 	/**
 	 * A single check that can be applied.
+	 * 定义一个函数式接口，用于建模一个检查，接收一个参数BeanDefinitionRegistry。
 	 */
 	@FunctionalInterface
 	protected interface Check {
 
 		/**
 		 * Returns a warning if the check fails or {@code null} if there are no problems.
+		 * 如果检查失败返回一个警告消息，如果没问题返回null
 		 *
 		 * @param registry the {@link BeanDefinitionRegistry}
 		 * @return a warning message or {@code null}
@@ -124,6 +129,7 @@ public class ConfigurationWarningsApplicationContextInitializer
 	}
 
 	/**
+	 * @ComponentScan 包扫描检查问题包任务的抽象和建模
 	 * {@link Check} for {@code @ComponentScan} on problematic package.
 	 */
 	protected static class ComponentScanPackageCheck implements Check {
@@ -139,11 +145,15 @@ public class ConfigurationWarningsApplicationContextInitializer
 
 		@Override
 		public String getWarning(BeanDefinitionRegistry registry) {
+			// 获取所有要扫描的包的集合
 			Set<String> scannedPackages = getComponentScanningPackages(registry);
+			// 检查所有要扫描的包，并返回其中有问题的包的集合
 			List<String> problematicPackages = getProblematicPackages(scannedPackages);
 			if (problematicPackages.isEmpty()) {
+				// 如果不存在问题包，返回null
 				return null;
 			}
+			// 返回一个消息，描述哪些被扫描包存在问题
 			return "Your ApplicationContext is unlikely to "
 					+ "start due to a @ComponentScan of "
 					+ StringUtils.collectionToDelimitedString(problematicPackages, ", ")
@@ -153,10 +163,14 @@ public class ConfigurationWarningsApplicationContextInitializer
 		protected Set<String> getComponentScanningPackages(
 				BeanDefinitionRegistry registry) {
 			Set<String> packages = new LinkedHashSet<>();
+			// 获取bean注册表中所有BeanDefinition的名称，也可以理解成所有登记的bean的名称
 			String[] names = registry.getBeanDefinitionNames();
 			for (String name : names) {
+				// 获取相应的BeanDefinitaion
 				BeanDefinition definition = registry.getBeanDefinition(name);
 				if (definition instanceof AnnotatedBeanDefinition) {
+					// 如果这是一个类型为AnnotatedBeanDefinition的BeanDefinition,
+					// 从其注解属性中搜集所有要扫描的包和类所在的包
 					AnnotatedBeanDefinition annotatedDefinition = (AnnotatedBeanDefinition) definition;
 					addComponentScanningPackages(packages,
 							annotatedDefinition.getMetadata());
@@ -172,8 +186,10 @@ public class ConfigurationWarningsApplicationContextInitializer
 			if (attributes != null) {
 				addPackages(packages, attributes.getStringArray("value"));
 				addPackages(packages, attributes.getStringArray("basePackages"));
+				// 增加要扫描的类所在的包
 				addClasses(packages, attributes.getStringArray("basePackageClasses"));
 				if (packages.isEmpty()) {
+					// 将当前metadata所属类的所在包也增加到packages中
 					packages.add(ClassUtils.getPackageName(metadata.getClassName()));
 				}
 			}
@@ -204,9 +220,12 @@ public class ConfigurationWarningsApplicationContextInitializer
 		}
 
 		private boolean isProblematicPackage(String scannedPackage) {
+			//如果该包为null或者0长度字符串，则认为这是一个问题包
 			if (scannedPackage == null || scannedPackage.isEmpty()) {
 				return true;
 			}
+			// 如果该包是PROBLEM_PACKAGES中的任何一个，也就是说如果它是
+			// org 或者 org.springframework 也认为是问题包
 			return PROBLEM_PACKAGES.contains(scannedPackage);
 		}
 

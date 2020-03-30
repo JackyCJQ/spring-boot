@@ -46,7 +46,7 @@ class SpringApplicationRunListeners {
 	}
 
 	/**
-	 * 根据环境配置为每一个Listener配置
+	 * 以下是根据各个阶段的时间来触发响应
 	 *
 	 * @param environment
 	 */

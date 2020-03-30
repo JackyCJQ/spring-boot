@@ -26,13 +26,8 @@ import org.springframework.util.StringUtils;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * {@link ApplicationContextInitializer} that sets the Spring
- * {@link ApplicationContext#getId() ApplicationContext ID}. The
- * {@code spring.application.name} property is used to create the ID. If the property is
- * not set {@code application} is used.
- *
- * @author Dave Syer
- * @author Andy Wilkinson
+ * 设置Spring应用上下文ID，也就是通过ApplicationContext#getId()去获取的那个属性，如果属性
+ * "spring.application.name"有设置，则使用它作为应用上下文id，否则使用字符串"application"。
  */
 public class ContextIdApplicationContextInitializer implements
 		ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
@@ -51,22 +46,31 @@ public class ContextIdApplicationContextInitializer implements
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
+		// 构建针对当前应用上下文的ContextId对象：可能基于双亲应用上下文创建或者直接创建
 		ContextId contextId = getContextId(applicationContext);
-		//bean中注册了这个bean
+		// 设置当前应用上下文的id
 		applicationContext.setId(contextId.getId());
+		// 将上面生成的ContextId对象，作为一个单例bean注册到当前应用上下文，
+		// 从下面的代码可以看到，这样做的用途之一就是万一当前应用上下文有子应用上下文，
+		// 该bean可以用于创建子应用上下文的ContextId对象
 		applicationContext.getBeanFactory().registerSingleton(ContextId.class.getName(),
 				contextId);
 	}
 
+	// 构建针对当前应用上下文的ContextId对象
 	private ContextId getContextId(ConfigurableApplicationContext applicationContext) {
 		ApplicationContext parent = applicationContext.getParent();
-		//如果父类中已经有了则直接创建
 		if (parent != null && parent.containsBean(ContextId.class.getName())) {
+			// 如果当前应用上下文有双亲上下文，并且双亲上下文已经存在自己的ContextId bean，
+			// 现在使用双亲上下文的ContextId bean生成当前应用上下文的ContextId对象
 			return parent.getBean(ContextId.class).createChildId();
 		}
+		// 如果当前应用上下文没有双亲应用上下文或者双亲应用上下文没有自己的ContextId bean，
+		// 则直接创建当前应用上下文的ContextId对象
 		return new ContextId(getApplicationId(applicationContext.getEnvironment()));
 	}
-
+	// 决定应用上下文id的名称：或者使用环境属性"spring.application.name"指定的值，或者使用
+	// 缺省值"application"
 	private String getApplicationId(ConfigurableEnvironment environment) {
 		//默认就是应用的名字
 		String name = environment.getProperty("spring.application.name");

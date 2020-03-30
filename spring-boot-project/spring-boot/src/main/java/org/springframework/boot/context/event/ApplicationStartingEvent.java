@@ -35,11 +35,6 @@ import org.springframework.core.env.Environment;
 @SuppressWarnings("serial")
 public class ApplicationStartingEvent extends SpringApplicationEvent {
 
-	/**
-	 * Create a new {@link ApplicationStartingEvent} instance.
-	 * @param application the current application
-	 * @param args the arguments the application is running with
-	 */
 	public ApplicationStartingEvent(SpringApplication application, String[] args) {
 		super(application, args);
 	}

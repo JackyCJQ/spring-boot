@@ -70,6 +70,8 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ *
+ * 读取应用的配置文件并add到Environment的PropertySources列表里
  * {@link EnvironmentPostProcessor} that configures the context environment by loading
  * properties from well known file locations. By default properties will be loaded from
  * 'application.properties' and/or 'application.yml' files in the following locations:
